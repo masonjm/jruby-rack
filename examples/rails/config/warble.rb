@@ -34,7 +34,7 @@ Warbler::Config.new do |config|
   # overwrite the value
   # config.gems = ["activerecord-jdbc-adapter", "jruby-openssl"]
   # config.gems << "tzinfo"
-  # config.gems["rails"] = "1.2.3"
+  config.gems["rails"] = "2.1.0"
 
   # Include gem dependencies not mentioned specifically
   config.gem_dependencies = true
@@ -53,14 +53,47 @@ Warbler::Config.new do |config|
   # Value of RAILS_ENV for the webapp
   config.webxml.rails.env = 'production'
 
+  # No JMS
+  # config.webxml.jms.provider = nil
+  # In-container JMS
+  # config.webxml.jms.provider = 'local'
+  # ActiveMQ
+  # config.webxml.jms.provider = 'activemq'
+  config.webxml.jms.provider = ENV['JMS_PROVIDER']
+
+  if config.webxml.jms.provider
+    if config.webxml.jms.provider == 'activemq'
+      config.webxml.jms.connection.factory = "ConnectionFactory"
+      config.webxml.jms.jndi.properties = <<-JNDI
+java.naming.factory.initial = org.apache.activemq.jndi.ActiveMQInitialContextFactory
+
+# use the following property to configure the default connector
+java.naming.provider.url = vm://localhost
+
+# use the following property to specify the JNDI name the connection factory
+# should appear as.
+#connectionFactoryNames = connectionFactory, queueConnectionFactory, topicConnectionFactry
+
+# register some queues in JNDI using the form
+# queue.[jndiName] = [physicalName]
+queue.rack = rack
+
+# register some topics in JNDI using the form
+# topic.[jndiName] = [physicalName]
+JNDI
+    else
+      config.webxml.jms.connection.factory = "jms/queues"
+    end
+  end
+
   # Application booter to use, one of :rack, :rails, or :merb. (Default :rails)
   # config.webxml.booter = :rails
 
   # Control the pool of Rails runtimes. Leaving unspecified means
   # the pool will grow as needed to service requests. It is recommended
   # that you fix these values when running a production server!
-  # config.webxml.jruby.min.runtimes = 2
-  # config.webxml.jruby.max.runtimes = 4
+  config.webxml.jruby.min.runtimes = 1
+  config.webxml.jruby.max.runtimes = 1
 
   # JNDI data source name
   # config.webxml.jndi = 'jdbc/rails'

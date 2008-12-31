@@ -4,11 +4,14 @@
  * See the file LICENSE.txt for details.
  */
 
-package org.jruby.webapp;
+package org.jruby.rack;
+
+import java.io.IOException;
 
 /**
- * Shim to allow drop-in compatibility with Goldspike.
+ *
  * @author nicksieger
  */
-public class FileServlet extends org.jruby.rack.RackServlet {
+public interface RackResponseEnvironment {
+    void defaultRespond(RackResponse response) throws IOException;
 }

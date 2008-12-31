@@ -4,11 +4,12 @@
  * See the file LICENSE.txt for details.
  */
 
-package org.jruby.webapp;
+package org.jruby.rack.jms;
 
 /**
- * Shim to allow drop-in compatibility with Goldspike.
+ *
  * @author nicksieger
  */
-public class RailsServlet extends org.jruby.rack.RackServlet {
+public interface QueueManagerFactory {
+    QueueManager newQueueManager();
 }

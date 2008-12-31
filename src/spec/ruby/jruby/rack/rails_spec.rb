@@ -12,29 +12,29 @@ class ::CGI::Session::PStore; end
 
 describe JRuby::Rack::RailsServletHelper do
   before :each do
-    @servlet_context.stub!(:getInitParameter).and_return nil
-    @servlet_context.stub!(:getRealPath).and_return "/"
+    @rack_context.stub!(:getInitParameter).and_return nil
+    @rack_context.stub!(:getRealPath).and_return "/"
   end
 
   def create_helper
-    @helper = JRuby::Rack::RailsServletHelper.new @servlet_context
+    @helper = JRuby::Rack::RailsServletHelper.new @rack_context
   end
   
   it "should determine RAILS_ROOT from the 'rails.root' init parameter" do
-    @servlet_context.should_receive(:getInitParameter).with("rails.root").and_return "/WEB-INF"
-    @servlet_context.should_receive(:getRealPath).with("/WEB-INF").and_return "./WEB-INF"
+    @rack_context.should_receive(:getInitParameter).with("rails.root").and_return "/WEB-INF"
+    @rack_context.should_receive(:getRealPath).with("/WEB-INF").and_return "./WEB-INF"
     create_helper
-    @helper.rails_root.should == "./WEB-INF"
+    @helper.app_path.should == "./WEB-INF"
   end
 
   it "should default RAILS_ROOT to /WEB-INF" do
-    @servlet_context.should_receive(:getRealPath).with("/WEB-INF").and_return "./WEB-INF"
+    @rack_context.should_receive(:getRealPath).with("/WEB-INF").and_return "./WEB-INF"
     create_helper
-    @helper.rails_root.should == "./WEB-INF"
+    @helper.app_path.should == "./WEB-INF"
   end
 
   it "should determine RAILS_ENV from the 'rails.env' init parameter" do
-    @servlet_context.should_receive(:getInitParameter).with("rails.env").and_return "test"
+    @rack_context.should_receive(:getInitParameter).with("rails.env").and_return "test"
     create_helper
     @helper.rails_env.should == "test"
   end
@@ -45,21 +45,21 @@ describe JRuby::Rack::RailsServletHelper do
   end
 
   it "should determine the public html root from the 'public.root' init parameter" do
-    @servlet_context.should_receive(:getInitParameter).with("public.root").and_return "/blah"
-    @servlet_context.should_receive(:getRealPath).with("/blah").and_return "."
+    @rack_context.should_receive(:getInitParameter).with("public.root").and_return "/blah"
+    @rack_context.should_receive(:getRealPath).with("/blah").and_return "."
     create_helper
-    @helper.public_root.should == "."
+    @helper.public_path.should == "."
   end
 
   it "should default public root to '/WEB-INF/public'" do
-    @servlet_context.should_receive(:getRealPath).with("/WEB-INF").and_return "."
+    @rack_context.should_receive(:getRealPath).with("/WEB-INF").and_return "."
     create_helper
-    @helper.public_root.should == "./public"
+    @helper.public_path.should == "./public"
   end
 
   it "should create a log device that writes messages to the servlet context" do
     create_helper
-    @servlet_context.should_receive(:log).with(/hello/)
+    @rack_context.should_receive(:log).with(/hello/)
     @helper.logdev.write "hello"
   end
 
@@ -88,7 +88,7 @@ describe JRuby::Rack::RailsServletHelper do
 
   it "should set the PUBLIC_ROOT constant to the location of the public root" do
     create_helper
-    PUBLIC_ROOT.should == @helper.public_root
+    PUBLIC_ROOT.should == @helper.public_path
   end
 
   describe "#load_environment" do
@@ -97,8 +97,8 @@ describe JRuby::Rack::RailsServletHelper do
       $servlet_context = @servlet_context
       @servlet_context.stub!(:getInitParameter).and_return nil
       @servlet_context.stub!(:getRealPath).and_return "/"
-      create_helper
-      @helper.rails_root = File.dirname(__FILE__) + "/../../rails"
+      @helper = JRuby::Rack::RailsServletHelper.new @servlet_context
+      @helper.app_path = File.dirname(__FILE__) + "/../../rails"
       @helper.load_environment
     end
 
@@ -107,7 +107,7 @@ describe JRuby::Rack::RailsServletHelper do
     end
 
     it "should default the page cache directory to the public root" do
-      ActionController::Base.page_cache_directory.should == @helper.public_root
+      ActionController::Base.page_cache_directory.should == @helper.public_path
     end
 
     it "should default the session store to the java servlet session store" do
@@ -115,15 +115,15 @@ describe JRuby::Rack::RailsServletHelper do
     end
 
     it "should set the ActionView ASSETS_DIR constant to the public root" do
-      ActionView::Helpers::AssetTagHelper::ASSETS_DIR.should == @helper.public_root
+      ActionView::Helpers::AssetTagHelper::ASSETS_DIR.should == @helper.public_path
     end
 
     it "should set the ActionView JAVASCRIPTS_DIR constant to the public root/javascripts" do
-      ActionView::Helpers::AssetTagHelper::JAVASCRIPTS_DIR.should == @helper.public_root + "/javascripts"
+      ActionView::Helpers::AssetTagHelper::JAVASCRIPTS_DIR.should == @helper.public_path + "/javascripts"
     end
 
     it "should set the ActionView STYLESHEETS_DIR constant to the public root/stylesheets" do
-      ActionView::Helpers::AssetTagHelper::STYLESHEETS_DIR.should == @helper.public_root + "/stylesheets"
+      ActionView::Helpers::AssetTagHelper::STYLESHEETS_DIR.should == @helper.public_path + "/stylesheets"
     end
   end
 end
@@ -154,7 +154,7 @@ describe JRuby::Rack, "Rails controller extensions" do
   end
 end
 
-describe JRuby::Rack::RailsSetup do
+describe JRuby::Rack::RailsRequestSetup do
   before :each do
     @app = mock "app"
     @servlet_request = mock "servlet request"
@@ -162,7 +162,7 @@ describe JRuby::Rack::RailsSetup do
     @helper = mock "servlet helper"
     @options = mock "options"
     @helper.stub!(:session_options_for_request).and_return @options
-    @rs = JRuby::Rack::RailsSetup.new @app, @helper
+    @rs = JRuby::Rack::RailsRequestSetup.new @app, @helper
     @env = {}
     @env['java.servlet_request'] = @servlet_request
   end
