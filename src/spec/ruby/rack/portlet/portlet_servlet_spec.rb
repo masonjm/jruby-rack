@@ -2,11 +2,19 @@ require File.dirname(__FILE__) + '/../../spec_helper'
 
 import org.jruby.rack.portlet.RackPortletServlet
 
-describe RackPortletServlet, "service" do
+class MyDispatcher < org.jruby.rack.servlet.DefaultServletDispatcher
+  def process(request, response); end
+end
+
+describe RackPortletServlet do
   before :each do
     @request = javax.servlet.http.HttpServletRequest.impl {}
     @response = javax.servlet.http.HttpServletResponse.impl {}
-    @dispatcher = mock("dispatcher", :null_object => true)
+
+    # This used to work, but now RackPortletServlet complains that it can't
+    # find a constructor that takes a org.jruby.RubyObject. Bah.
+    #@dispatcher = mock('dispatcher', :null_objects => true)
+    @dispatcher = MyDispatcher.new(nil)
     @servlet = RackPortletServlet.new(@dispatcher)
   end
 

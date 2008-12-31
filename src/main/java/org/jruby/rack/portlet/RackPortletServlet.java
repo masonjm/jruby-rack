@@ -1,6 +1,5 @@
 package org.jruby.rack.portlet;
 
-import org.jruby.rack.*;
 import java.io.IOException;
 import javax.servlet.ServletConfig;
 import javax.servlet.ServletException;
@@ -11,13 +10,14 @@ import javax.servlet.http.HttpServlet;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletRequestWrapper;
 import javax.servlet.http.HttpServletResponse;
+import org.jruby.rack.servlet.DefaultServletDispatcher;
 
 /**
  *
  * @author masonjm
  */
 public class RackPortletServlet extends HttpServlet {
-    private RackDispatcher dispatcher;
+    private DefaultServletDispatcher dispatcher;
 
     /** Default constructor, used by servlet container
      */
@@ -26,13 +26,13 @@ public class RackPortletServlet extends HttpServlet {
 
     /** Constructor for testing
      */
-    public RackPortletServlet(RackDispatcher dispatcher) {
+    public RackPortletServlet(DefaultServletDispatcher dispatcher) {
         this.dispatcher = dispatcher;
     }
 
     @Override
     public void init(ServletConfig config) {
-        this.dispatcher = new DefaultRackDispatcher(config.getServletContext());
+        this.dispatcher = new DefaultServletDispatcher(config.getServletContext());
     }
 
     @Override
